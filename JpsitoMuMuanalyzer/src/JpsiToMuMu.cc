@@ -76,8 +76,7 @@ JpsiToMuMu::JpsiToMuMu(const edm::ParameterSet& iConfig):
 {
    //now do what ever initialization is needed
   assert(TriggerNames_.size() == LastFilterNames_.size());
-  for (size_t i=0; i < TriggerNames_.size(); ++i)
-    mapTriggerToLastFilter_[TriggerNames_[i]] = LastFilterNames_[i];
+  for (size_t i=0; i < TriggerNames_.size(); ++i)mapTriggerToLastFilter_[TriggerNames_[i]] = LastFilterNames_[i];
 
 }
 
@@ -135,7 +134,7 @@ void JpsiToMuMu::beginJob()
 
   fout_ = new TFile(OutputFileName_.c_str(), "RECREATE");
   fout_->cd();
-  /*
+  
   for(int i=0; i<Histnamesize; i++) {
     histos[i] = new TH1F(hist_arg[i].name, hist_arg[i].title,
 			 hist_arg[i].nbins,
@@ -213,7 +212,7 @@ void JpsiToMuMu::beginJob()
   tree_->Branch("jpsictauerr", &jpsictauerr);
  
  tree_->Branch("njpsi", &njpsi, "njpsi/I");
-  */
+  
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
@@ -221,7 +220,7 @@ void
 JpsiToMuMu::endJob() 
 {
   fout_->cd();
-  //tree_->Write();
+  tree_->Write();
   /*
   for(int i = 0; i < Histnamesize; i++) {
     histos[i]->Write();
@@ -297,11 +296,11 @@ void JpsiToMuMu::clearVariables(){
   jpsilsbs->clear(); jpsilsbserr->clear(); jpsictau->clear(); jpsictauerr->clear();
 
 }
+
 void JpsiToMuMu::hltReport(const edm::Event& iEvent)
 {
 
   edm::Handle<edm::TriggerResults> hltTriggerResults;
-  //  try {iEvent.getByLabel( TriggerResultsLabel_, hltTriggerResults ); }
   try {iEvent.getByToken( TriggerResultsLabel_, hltTriggerResults ); }
   catch ( ... ) { edm::LogInfo("myHLT")
       << __LINE__ << " : couldn't get handle on HLT Trigger" ; }
@@ -530,15 +529,10 @@ bool  JpsiToMuMu::hasGoodMuonDcaBs (const reco::TransientTrack muTrackTT,double 
   return true;
 }
 
-bool  JpsiToMuMu::calClosestApproachTracks (const reco::TransientTrack trackpTT,
-						    const reco::TransientTrack trackmTT,
-						    double & trk_R,
-						    double & trk_Z,
-						    double & trk_DCA)
+bool JpsiToMuMu::calClosestApproachTracks (const reco::TransientTrack trackpTT,const reco::TransientTrack trackmTT,double & trk_R, double & trk_Z, double & trk_DCA)
 {
   ClosestApproachInRPhi ClosestApp;
-  ClosestApp.calculate(trackpTT.initialFreeState(),
-		       trackmTT.initialFreeState());
+  ClosestApp.calculate(trackpTT.initialFreeState(), trackmTT.initialFreeState());
   if (! ClosestApp.status() )  return false ;
   
   GlobalPoint XingPoint = ClosestApp.crossingPoint();
@@ -552,7 +546,7 @@ bool  JpsiToMuMu::calClosestApproachTracks (const reco::TransientTrack trackpTT,
 }
 
 
-bool JpsiToMuMu::hasGoodMuMuVertex(const reco::TransientTrack muTrackpTT,const reco::TransientTrack muTrackmTT,
+bool JpsiToMuMu::hasGoodMuMuVertex(const reco::TransientTrack muTrackpTT, const reco::TransientTrack muTrackmTT,
 					   reco::TransientTrack &refitMupTT,
 					   reco::TransientTrack &refitMumTT,
 					   double & mu_mu_vtx_cl, double & mu_mu_pt,
@@ -581,8 +575,7 @@ bool JpsiToMuMu::hasGoodMuMuVertex(const reco::TransientTrack muTrackpTT,const r
   RefCountedKinematicVertex mumu_KV = mumuVertexFitTree->currentDecayVertex();
   if ( !mumu_KV->vertexIsValid()) return false;
 
-  mu_mu_vtx_cl = TMath::Prob((double)mumu_KV->chiSquared(),
-			     int(rint(mumu_KV->degreesOfFreedom())));
+  mu_mu_vtx_cl = TMath::Prob((double)mumu_KV->chiSquared(), int(rint(mumu_KV->degreesOfFreedom())));
 
   if (mu_mu_vtx_cl < MuMuMinVtxCl_)  return false;
   mumuVertexFitTree->movePointerToTheTop();
@@ -684,14 +677,11 @@ bool JpsiToMuMu::hasGoodJpsiVertex(const reco::TransientTrack mu1TT,
   RefCountedKinematicParticle jpsi_KP = vertexFitTree->currentParticle();
   jpsi_mass = jpsi_KP->currentState().mass();
 
-  //if ( (b_vtx_cl < BsMinVtxCl_) || (b_mass < BsMinMass_) || (b_mass > BsMaxMass_) ) return false;
-  //printf("reco Bs cand vtxcl: %6.4f , mass: %6.4f \n", b_vtx_cl, b_mass); 
-
   return true;
 
 }
 void JpsiToMuMu::saveJpsitoMuMu(const RefCountedKinematicTree vertexFitTree){
-  vertexFitTree->movePointerToTheTop(); // Bs --> phi(KK) mu+ mu-                                                                                         
+  vertexFitTree->movePointerToTheTop(); // Jpsi -->mu+ mu-
   RefCountedKinematicParticle jpsi_KP = vertexFitTree->currentParticle();
 
   jpsipx->push_back(jpsi_KP->currentState().globalMomentum().x());
